@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard ໂປຣ ເສັ້ນນ້ອຍນ້ຳຕົກງົວ ແຖມ Pepsi ໝາກນາວ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F3F4F8;
+    --card:#FFFFFF;
+    --ink:#1E2130;
+    --muted:#767C8E;
+    --line:#E7E9F0;
+    --primary:#E4572E;
+    --primary-dark:#C6431E;
+    --primary-soft:#FDECE5;
+    --good:#1E9E63;
+    --good-soft:#E4F7ED;
+    --bad:#E0334D;
+    --bad-soft:#FCE7EA;
+    --gold:#E0A526;
+    --gold-soft:#FCF3DE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Inter','Noto Sans Lao',sans-serif;
+    padding:0 0 60px;
+  }
+  .lao{ font-family:'Noto Sans Lao','Inter',sans-serif; }
+
+  .banner{
+    background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color:#fff; padding:34px 20px 46px; text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .banner::after{
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(circle at 85% 0%, rgba(255,255,255,0.16), transparent 55%);
+  }
+  .banner-icon{ font-size:34px; }
+  .banner h1{ font-size:24px; margin:8px 0 6px; font-weight:800; }
+  .banner-meta{ font-size:12.5px; opacity:.92; font-family:'Inter',monospace; letter-spacing:.02em; }
+  .banner-date{
+    display:inline-block; margin-top:14px; background:rgba(255,255,255,0.16);
+    border:1px solid rgba(255,255,255,0.35); padding:6px 16px; border-radius:20px;
+    font-size:13px; font-weight:600;
+  }
+
+  .container{ max-width:1040px; margin:-26px auto 0; padding:0 18px; }
+
+  .card{
+    background:var(--card); border-radius:16px; border:1px solid var(--line);
+    box-shadow:0 1px 2px rgba(20,20,40,0.04), 0 8px 24px rgba(20,20,40,0.04);
+    padding:22px 24px; margin-bottom:16px;
+  }
+
+  .promo-card{ display:flex; gap:16px; align-items:flex-start; }
+  .promo-emoji{ font-size:28px; line-height:1; }
+  .promo-title{ font-weight:800; font-size:16px; margin:0 0 8px; }
+  .promo-body{ font-size:13.5px; color:var(--muted); line-height:1.7; }
+  .promo-body b{ color:var(--ink); }
+  .price-row{
+    margin-top:12px; display:flex; flex-wrap:wrap; gap:8px 18px; font-size:13px;
+  }
+  .price-row .item{ color:var(--muted); }
+  .price-row .item b{ color:var(--ink); font-weight:700; }
+  .price-row .final{ color:var(--good); font-weight:800; }
+  .price-row .target-pill{
+    background:var(--gold-soft); color:#8a6a10; font-weight:700; padding:2px 10px; border-radius:12px; font-size:12px;
+  }
+
+  /* target hero */
+  .target-card{ text-align:center; padding:28px 24px; }
+  .target-emoji{ font-size:30px; }
+  .target-label{ font-weight:800; font-size:15px; margin:6px 0 2px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-size:12px;}
+  .target-value{ font-size:34px; font-weight:800; margin:6px 0 2px; }
+  .target-sub{ font-size:13px; color:var(--muted); margin-bottom:18px;}
+  .result-line{ font-size:15px; font-weight:700; margin-bottom:10px; }
+  .result-line .pct{ color:var(--bad); }
+  .track{ height:16px; border-radius:10px; background:var(--bad-soft); overflow:hidden; max-width:520px; margin:0 auto; border:1px solid var(--line); }
+  .fill{ height:100%; background:linear-gradient(90deg,var(--gold),var(--primary)); border-radius:10px 0 0 10px; }
+  .gap-caption{ margin-top:10px; font-size:13px; color:var(--bad); font-weight:700; }
+
+  /* KPI grid */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:16px; }
+  .kpi{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 16px 14px; }
+  .kpi-top{ font-size:11.5px; color:var(--muted); font-weight:600; letter-spacing:.02em; margin-bottom:6px;}
+  .kpi-val{ font-size:22px; font-weight:800; }
+  .kpi-sub{ font-size:11.5px; color:var(--muted); margin-top:4px; }
+  .kpi.accent .kpi-val{ color:var(--primary); }
+  .kpi.bad .kpi-val{ color:var(--bad); }
+  .kpi.good .kpi-val{ color:var(--good); }
+
+  .section-h{ font-weight:800; font-size:14.5px; margin:0 0 14px; display:flex; align-items:center; gap:8px; }
+
+  canvas{ max-height:260px; }
+  .chart-note{ font-size:11.5px; color:var(--muted); margin-top:10px; }
+
+  .gap-list{ list-style:none; padding:0; margin:0; font-size:13.5px; line-height:2; }
+  .gap-list li{ padding-left:18px; position:relative; }
+  .gap-list li::before{ content:'•'; position:absolute; left:0; color:var(--primary); font-weight:900; }
+
+  .zero-card{ background:var(--bad-soft); border:1px solid #f2c3ca; }
+  .zero-card .section-h{ color:var(--bad); margin-bottom:8px; }
+  .zero-card p{ margin:4px 0 0; font-size:13px; color:#8a1f30; }
+
+  .stat-strip{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  .stat-box{ text-align:center; padding:16px 10px; border-radius:14px; background:var(--card); border:1px solid var(--line); }
+  .stat-box .v{ font-size:19px; font-weight:800; }
+  .stat-box .l{ font-size:11px; color:var(--muted); margin-top:4px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  thead th{
+    position:sticky; top:0; background:var(--card); text-align:left; padding:8px 10px;
+    border-bottom:2px solid var(--line); color:var(--muted); font-weight:700; font-size:11px;
+    text-transform:uppercase; letter-spacing:.03em;
+  }
+  tbody td{ padding:7px 10px; border-bottom:1px solid var(--line); }
+  tbody tr:hover{ background:#FAFAFC; }
+  .table-wrap{ max-height:360px; overflow:auto; border:1px solid var(--line); border-radius:10px; }
+  .qty-badge{
+    display:inline-block; background:var(--primary-soft); color:var(--primary-dark);
+    font-weight:700; padding:1px 8px; border-radius:10px; font-size:11.5px;
+  }
+  .table-caption{ font-size:12px; color:var(--muted); margin-bottom:10px; }
+
+  .footer-note{ text-align:center; font-size:11.5px; color:var(--muted); margin-top:24px; }
+
+  @media(max-width:520px){
+    .banner h1{ font-size:19px; }
+    .target-value{ font-size:27px; }
+    .card{ padding:18px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="banner lao">
+  <div class="banner-icon">🍜🥤</div>
+  <h1>Dashboard ຍອດຂາຍ ໂປຣ ເສັ້ນນ້ອຍນ້ຳຕົກງົວ (ຖ້ວຍໃຫຍ່) ແຖມ Pepsi ໝາກນາວ</h1>
+  <div class="banner-meta">Promotion · ຮ້ານອາຫານ a.m ສາຂາ ວຽງຈັນ · ກໍ.ລ. 2026</div>
+  <div class="banner-date">1 – 10 ກໍລະກົດ 2026</div>
+</div>
+
+<div class="container">
+
+  <div class="card promo-card lao">
+    <div class="promo-emoji">🍜</div>
+    <div>
+      <div class="promo-title">ໂປຣໂມຊັນ — ເສັ້ນນ້ອຍນ້ຳຕົກງົວ (ຖ້ວຍໃຫຍ່) ແຖມ Pepsi ໝາກນາວ</div>
+      <div class="promo-body">ຊື້: ເສັ້ນນ້ອຍນ້ຳຕົກງົວ ຖ້ວຍໃຫຍ່ 1 ຖ້ວຍ<br>ແຖມ: ແປັບຊີ່ ໝາກນາວ × 1 ຈອກ</div>
+      <div class="price-row">
+        <span class="item">ລາຄາ/ຊຸດ <b>₭62,000</b></span>
+        <span class="item final">ຮັບຈິງ ₭62,000/ຊຸດ</span>
+        <span class="target-pill">🎯 ເປົ້າ 15 ຊຸດ/ວັນ</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card target-card lao">
+    <div class="target-emoji">🎯</div>
+    <div class="target-label">ເປົ້າໝາຍ</div>
+    <div class="target-value">15 ຊຸດ / ວັນ</div>
+    <div class="target-sub">ລວມ 10 ວັນ = 150 ຊຸດ · ເປົ້າ ₭9,300,000</div>
+    <div class="result-line">ຜົນໄດ້ຮັບ: 18 / 150 ຊຸດ <span class="pct">(12.0%)</span></div>
+    <div class="track"><div class="fill" style="width:12%"></div></div>
+    <div class="gap-caption">ຂາດຈາກເປົ້າ 132 ຊຸດ ( ₭8,184,000 )</div>
+  </div>
+
+  <div class="kpi-grid lao">
+    <div class="kpi accent">
+      <div class="kpi-top">ຂາຍໄດ້ທັງໝົດ</div>
+      <div class="kpi-val">18 ຊຸດ</div>
+      <div class="kpi-sub">ເປົ້າ 150 ຊຸດ (10 ວັນ)</div>
+    </div>
+    <div class="kpi good">
+      <div class="kpi-top">ຍອດຮັບຈິງ</div>
+      <div class="kpi-val">₭1.12M</div>
+      <div class="kpi-sub">ເປົ້າ ₭9.30M</div>
+    </div>
+    <div class="kpi bad">
+      <div class="kpi-top">ຂາດຈາກເປົ້າ</div>
+      <div class="kpi-val">132 ຊຸດ</div>
+      <div class="kpi-sub">₭8,184,000 ທີ່ຂາດ</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top">ສະເລ່ຍ/ວັນ</div>
+      <div class="kpi-val">1.8 ຊຸດ</div>
+      <div class="kpi-sub">ເປົ້າ 15 ຊຸດ/ວັນ</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top">ຈຳນວນບິນ</div>
+      <div class="kpi-val">12 ບິນ</div>
+      <div class="kpi-sub">1.5 ຊຸດ/ບິນ</div>
+    </div>
+    <div class="kpi bad">
+      <div class="kpi-top">ວັນທີ່ຮອດເປົ້າ</div>
+      <div class="kpi-val">0 / 10</div>
+      <div class="kpi-sub">≥15 ຊຸດ/ວັນ</div>
+    </div>
+  </div>
+
+  <div class="card lao">
+    <div class="section-h">📈 ຍອດຂາຍ ລາຍວັນ vs ເປົ້າ 15 ເຊັດ</div>
+    <canvas id="dailyChart"></canvas>
+    <div class="chart-note">ຈຳນວນຊຸດ · ⭐ 02/07 = ວັນຂາຍດີສຸດ 6 ຊຸດ · ເສັ້ນປະ = ເປົ້າ 15 ຊຸດ</div>
+  </div>
+
+  <div class="card lao">
+    <div class="section-h">⏱ ຊ່ວງເວລາ Prime — ຈຳນວນຊຸດ ແຕ່ລະຊົ່ວໂມງ</div>
+    <canvas id="hourChart"></canvas>
+    <div class="chart-note">ຊົ່ວໂມງຂາຍດີສຸດ: 16:00–17:00 (7 ຊຸດ)</div>
+  </div>
+
+  <div class="card lao">
+    <div class="section-h">📊 ສະຫຼຸບ Gap</div>
+    <ul class="gap-list">
+      <li>ບໍ່ມີວັນໃດຮອດເປົ້າ 15 ເຊັດ ເລີຍ — ຮອດ 0 ໃນ 10 ວັນ</li>
+      <li>ວັນດີທີ່ສຸດ: 02 ກໍ.ລ. (6 ຊຸດ = ພຽງ 40% ຂອງເປົ້າ)</li>
+      <li>5 ໃນ 10 ວັນ ບໍ່ໄດ້ຂາຍເລີຍ (50% Zero day)</li>
+      <li>Prime time 16:00–17:00 (7/18 = 39%)</li>
+      <li>ຕ້ອງເພີ່ມ ~13.2 ເຊັດ/ວັນ ຈຶ່ງຈະຮອດເປົ້າສະສົມ</li>
+    </ul>
+  </div>
+
+  <div class="card zero-card lao">
+    <div class="section-h">⬜ ວັນ 0 ຊຸດ</div>
+    <p><b>03, 06, 07, 08, 10 ກໍລະກົດ 2026</b> (5 ວັນ)</p>
+    <p>ຄວນວິເຄາະວ່າ stock ໝົດ, ຮ້ານປິດ ຫຼື ລູກຄ້າບໍ່ຮັບຮູ້ໂປຣ — ເຄິ່ງໜຶ່ງຂອງໄລຍະໂປຣບໍ່ມີຍອດຂາຍເລີຍ</p>
+  </div>
+
+  <div class="card lao">
+    <div class="section-h">📋 ລາຍການທຸລະກຳ</div>
+    <div class="table-caption">12 ບິນ · 18 ຊຸດ · ₭1,116,000 ຮັບຈິງ</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ວັນທີ</th><th>ເວລາ</th><th>ຊຸດ</th><th>ຮັບຈິງ (₭)</th></tr></thead>
+        <tbody id="txBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="stat-strip lao">
+    <div class="stat-box"><div class="v">02 ກໍ.ລ.</div><div class="l">ວັນຂາຍດີສຸດ (6 ຊຸດ)</div></div>
+    <div class="stat-box"><div class="v">16:00–17:00</div><div class="l">Prime time</div></div>
+    <div class="stat-box"><div class="v">50%</div><div class="l">Zero day rate (5/10 ວັນ)</div></div>
+    <div class="stat-box"><div class="v" style="color:var(--bad)">12.0%</div><div class="l">Achievement</div></div>
+  </div>
+
+  <div class="footer-note lao">ອີງຕາມຂໍ້ມູນບິນຂາຍຈິງ 01–10 ກໍລະກົດ 2026</div>
+</div>
+
+<script>
+const days = [
+  {d:'01/07', qty:5, rev:310000},
+  {d:'02/07', qty:6, rev:372000},
+  {d:'03/07', qty:0, rev:0},
+  {d:'04/07', qty:4, rev:248000},
+  {d:'05/07', qty:2, rev:124000},
+  {d:'06/07', qty:0, rev:0},
+  {d:'07/07', qty:0, rev:0},
+  {d:'08/07', qty:0, rev:0},
+  {d:'09/07', qty:1, rev:62000},
+  {d:'10/07', qty:0, rev:0},
+];
+new Chart(document.getElementById('dailyChart'), {
+  type:'bar',
+  data:{
+    labels: days.map(d=>d.d),
+    datasets:[
+      {
+        label:'ຈຳນວນຊຸດ',
+        data: days.map(d=>d.qty),
+        backgroundColor: days.map(d=> d.qty>=15 ? '#1E9E63' : d.qty===0 ? '#D6D9E2' : '#E4572E'),
+        borderRadius:6, yAxisID:'y', order:2
+      },
+      {
+        label:'ເປົ້າ 15 ຊຸດ',
+        data: days.map(()=>15),
+        type:'line', borderColor:'#767C8E', borderDash:[6,4], borderWidth:2,
+        pointRadius:0, yAxisID:'y', order:1
+      },
+      {
+        label:'ຍອດຮັບຈິງ (₭)',
+        data: days.map(d=>d.rev),
+        type:'line', borderColor:'#E0A526', backgroundColor:'#E0A526',
+        yAxisID:'y1', pointRadius:3, borderWidth:2, order:0
+      }
+    ]
+  },
+  options:{
+    responsive:true,
+    interaction:{ mode:'index', intersect:false },
+    scales:{
+      y:{ beginAtZero:true, title:{display:true, text:'ຊຸດ'} },
+      y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false}, title:{display:true, text:'₭'} }
+    },
+    plugins:{ legend:{ position:'bottom', labels:{ font:{ family:'Inter' } } } }
+  }
+});
+
+const hours = [
+  {h:'11:00', qty:1}, {h:'12:00', qty:3}, {h:'13:00', qty:1},
+  {h:'14:00', qty:2}, {h:'15:00', qty:4}, {h:'16:00', qty:7}
+];
+new Chart(document.getElementById('hourChart'), {
+  type:'bar',
+  data:{
+    labels: hours.map(h=>h.h),
+    datasets:[{
+      label:'ຈຳນວນຊຸດ',
+      data: hours.map(h=>h.qty),
+      backgroundColor: hours.map(h=> h.qty===Math.max(...hours.map(x=>x.qty)) ? '#E4572E' : '#F5C9B7'),
+      borderRadius:6
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ beginAtZero:true, title:{display:true, text:'ຊຸດ'} } }
+  }
+});
+
+const tx = [
+{"date":"01/07","time":"11:33","qty":1,"rev":62000},{"date":"01/07","time":"12:45","qty":1,"rev":62000},{"date":"01/07","time":"13:41","qty":1,"rev":62000},{"date":"01/07","time":"15:02","qty":2,"rev":124000},{"date":"02/07","time":"12:42","qty":1,"rev":62000},{"date":"02/07","time":"15:17","qty":1,"rev":62000},{"date":"02/07","time":"15:54","qty":1,"rev":62000},{"date":"02/07","time":"16:31","qty":3,"rev":186000},{"date":"04/07","time":"16:43","qty":2,"rev":124000},{"date":"04/07","time":"16:57","qty":2,"rev":124000},{"date":"05/07","time":"14:06","qty":2,"rev":124000},{"date":"09/07","time":"12:02","qty":1,"rev":62000}
+];
+const tbody = document.getElementById('txBody');
+tbody.innerHTML = tx.map(r=>`<tr><td>${r.date}</td><td>${r.time}</td><td><span class="qty-badge">${r.qty}</span></td><td>${r.rev.toLocaleString()}</td></tr>`).join('');
+</script>
+</body>
+</html>
